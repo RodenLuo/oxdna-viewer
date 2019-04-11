@@ -1,10 +1,10 @@
 /// <reference path="./three/index.d.ts" />
 
 var BACKBONE = 0
-var NUCLEOSIDE = 1 
+var NUCLEOSIDE = 1
 var BB_NS_CON = 2
 var COM = 3
-var SP_CON= 4
+var SP_CON = 4
 
 render();
 // nucleotides store the information about position, orientation, ID
@@ -115,7 +115,7 @@ class System {
     //remove_system(){};
 };
 
-function dat_loader (file) {
+function dat_loader(file) {
 
 }
 
@@ -234,9 +234,6 @@ function toggleColorOptions() {
         }
         opt.appendChild(addButton);
     }
-}
-
-function updateColor(colorPicker) {
 }
 
 function createVideo() {
@@ -371,7 +368,7 @@ function toggleBackground() {
         scene.background = BLACK;
         render();
     }
-    else{
+    else {
         scene.background = WHITE;
         render();
     }
@@ -440,7 +437,7 @@ function centerSystems() { //centers systems based on cms calculated for world (
             p.add(new THREE.Vector3().addScalar(1.5*box));
             p.x %= box; p.y %= box; p.z %= box;
             p.sub(new THREE.Vector3().addScalar(0.75*box));
-        }
+       }
     }
     render();
 }

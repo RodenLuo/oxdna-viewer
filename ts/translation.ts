@@ -20,7 +20,6 @@ function getAxisMode(): string {
     return document.querySelector('input[name="rotate"]:checked')['value'];
 }
 
-
 let dragControls: THREE.DragControls; //dragging functionality
 function drag() { //sets up DragControls - allows dragging of DNA - if action mode includes "drag"
     var nucleotide_objects = []
@@ -32,6 +31,10 @@ function drag() { //sets up DragControls - allows dragging of DNA - if action mo
     dragControls.addEventListener('dragstart', function (event) { controls.enabled = false; }); // prevents rotation of camera
     dragControls.addEventListener('dragend', function (event) { controls.enabled = true; })
 }
+
+/*function setRotAngle(textArea) { //get angle in text area and store it
+    angle = parseInt(textArea.value);
+}*/
 
 function getRotObj(i) { //identify selected objects and rotate
     let rotobj;
@@ -54,16 +57,18 @@ function getRotObj(i) { //identify selected objects and rotate
 
 function rotate() { //rotate according to given angle given in number input
     let angle = (<HTMLInputElement>document.getElementById("rotAngle")).valueAsNumber;
+    console.log(angle);
     var rot = false; //rotation success boolean
     for (let i = 0; i < selected_bases.length; i++) { //go through each nucleotide in all systems
         if (selected_bases[i] == 1) { //if nucleotide is selected
             let rotobj = getRotObj(i); //get object to rotate - nucleotide, strand, or system based on mode
-            //rotate around user selected axis with user entered angle
-            switch(getAxisMode()) {
+            //get axis on which to rotate
+            //rotate around user selected axis - default is X - and user entered angle - updated every time textarea is changed; default is 90
+            switch (getAxisMode()) {
                 case "X": rotobj.rotateX(angle * Math.PI / 180); break;
                 case "Y": rotobj.rotateY(angle * Math.PI / 180); break;
                 case "Z": rotobj.rotateZ(angle * Math.PI / 180); break;
-                default: alert("Unknown rotation axis: "+getAxisMode());
+                default: alert("Unknown rotation axis: " + getAxisMode());
             }
             render();
             rot = true;
@@ -90,4 +95,3 @@ function rotate() { //rotate according to given angle given in number input
         alert("Please select an object to rotate.");
     }
 }
-

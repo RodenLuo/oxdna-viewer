@@ -28,6 +28,9 @@ function drag() {
     dragControls.addEventListener('dragstart', function (event) { controls.enabled = false; }); // prevents rotation of camera
     dragControls.addEventListener('dragend', function (event) { controls.enabled = true; });
 }
+/*function setRotAngle(textArea) { //get angle in text area and store it
+    angle = parseInt(textArea.value);
+}*/
 function getRotObj(i) {
     let rotobj;
     let nuctemp = nucleotides[i];
@@ -48,11 +51,13 @@ function getRotObj(i) {
 }
 function rotate() {
     let angle = document.getElementById("rotAngle").valueAsNumber;
+    console.log(angle);
     var rot = false; //rotation success boolean
     for (let i = 0; i < selected_bases.length; i++) { //go through each nucleotide in all systems
         if (selected_bases[i] == 1) { //if nucleotide is selected
             let rotobj = getRotObj(i); //get object to rotate - nucleotide, strand, or system based on mode
-            //rotate around user selected axis with user entered angle
+            //get axis on which to rotate
+            //rotate around user selected axis - default is X - and user entered angle - updated every time textarea is changed; default is 90
             switch (getAxisMode()) {
                 case "X":
                     rotobj.rotateX(angle * Math.PI / 180);

@@ -202,8 +202,6 @@ function toggleColorOptions() {
         opt.appendChild(addButton);
     }
 }
-function updateColor(colorPicker) {
-}
 function createVideo() {
     // Get canvas
     let canvas = document.getElementById("threeCanvas");
