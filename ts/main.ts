@@ -240,42 +240,90 @@ function updateColor(colorPicker) {
 }
 
 function createVideo() {
-    // get canvas
+    // Get canvas
     let canvas = <HTMLCanvasElement> document.getElementById("threeCanvas");
 
-    // get options:
+    // Get options:
     let format = (<HTMLInputElement>document.querySelector('input[name="videoFormat"]:checked')).value;
     let framerate = (<HTMLInputElement>document.getElementById("videoFramerate")).value;
-    // set up movie capturer
+    let videoType = <HTMLInputElement> document.getElementById("videoType");
+
+    // Set up movie capturer
     const capturer = new CCapture({
         format: format,
         framerate: framerate,
-        name: 'trajectory',
+        name: videoType.value,
         verbose: true,
         display: true,
         workersPath: 'ts/lib/'
     });
-
+    try {
+        switch (videoType.value) {
+            case "trajectory":
+                createTrajectoryVideo(canvas, capturer);
+                break;
+            case "lemniscate":
+                createLemniscateVideo(canvas, capturer, framerate);
+                break;
+        }
+    } catch (e) {
+        alert("Failed to capture video: \n"+e);
+        capturer.stop();
+    }
+}
+function createTrajectoryVideo(canvas, capturer) {
+    // Listen for configuration loaded events
     document.addEventListener('nextConfigLoaded', function (e) {
         e.preventDefault(); // cancel default actions
-        try {
-            capturer.capture(canvas);
-        } catch (e) {
-            alert("Failed to capture video: \n"+e);
-            capturer.stop();
-            return;
-        }
+        capturer.capture(canvas);
         nextConfig();
     });
 
+    // Listen for last configuration event
     document.addEventListener('finalConfig', function (e) {
         capturer.stop();
         capturer.save();
     });
 
+    // Start capturing
     capturer.start();
     nextConfig();
+}
 
+function createLemniscateVideo(canvas, capturer, framerate) {
+    // Setup timing
+    let duration = 20; //Seconds
+    let tMax = 2*Math.PI;
+    let nFrames = duration*(<number><unknown>framerate);
+    let dt = tMax/nFrames;
+
+    // Preserve camera distance from origin:
+    let d = Origin.distanceTo(camera.position);
+
+    capturer.start();
+
+    // Move camera and capture frames
+    // This is not a for-loop since we need to use
+    // requestAnimationFrame recursively.
+    let t=0;
+    var animate = function() {
+        if (t>=tMax) {
+            capturer.stop();
+            capturer.save();
+            return;
+        }
+        requestAnimationFrame(animate);
+        camera.position.set(
+            d * Math.cos(t),
+            d * Math.sin(t) * Math.cos(t),
+            d * Math.sqrt(Math.pow(Math.sin(t),4))
+        );
+        camera.lookAt(Origin);
+        t+=dt;
+        render();
+        capturer.capture(canvas);
+    }
+    animate();
 }
 
 function toggleLut(chkBox) { //toggles display of coloring by json file / structure modeled off of base selector
