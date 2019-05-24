@@ -5,6 +5,10 @@
     "\\ts",
     "\\ts\\controls"
   ],
+<<<<<<< HEAD
   "SelectedNode": "\\ts\\translation.ts",
+=======
+  "SelectedNode": "\\ts\\scene_setup.ts",
+>>>>>>> parent of c96ecd3... System rotation - individual mesh rotations not correct
   "PreviewInSolutionExplorer": false
 }
