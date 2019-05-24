@@ -27,17 +27,11 @@ function getScopeMode() {
 var sz = document.forms['Mode'].elements['mode'];
 // loop through list
 
-<<<<<<< HEAD
 for (let i = 0, len = sz.length; i < len; i++) {
     sz[i].onclick = function () { // assign onclick handler function to each radio button
         //when radio button changed, get new modes
         getScopeMode();
     };
-=======
-function setAngle(): void {
-    angle = (<HTMLInputElement>document.getElementById("rotAngle")).valueAsNumber * Math.PI / 180;
-    console.log(angle);
->>>>>>> parent of ad87fb1... Trajectory doesn't create new sp every time now - only updates existing
 }
 
 // get list of checkboxes with name 'action'
