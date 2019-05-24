@@ -791,7 +791,6 @@ function getNewConfig(mode) { //attempts to display next configuration; same as 
                     z_sp = (this_pos.z + last_pos.z) / 2;
                 let sp_len = Math.sqrt(Math.pow(this_pos.x - last_pos.x, 2) + Math.pow(this_pos.y - last_pos.y, 2) + Math.pow(this_pos.z - last_pos.z, 2));
 
-<<<<<<< HEAD
                 //easy periodic boundary condition fix
                 //if the bonds are too long just don't add them
                 if (sp_len <= 5) {
@@ -806,18 +805,6 @@ function getNewConfig(mode) { //attempts to display next configuration; same as 
                     group.children[SP_CON].position.set(x_sp, y_sp, z_sp); //set position
                     group.children[SP_CON].parent = current_nucleotide.visual_object;
                 }
-=======
-                let rotation_sp = new THREE.Matrix4().makeRotationFromQuaternion(
-                    new THREE.Quaternion().setFromUnitVectors(
-                        new THREE.Vector3(0, 1, 0), new THREE.Vector3(this_pos.x - last_pos.x, this_pos.y - last_pos.y, this_pos.z - last_pos.z).normalize()
-                    )
-                );
-                group.children[SP_CON] = new THREE.Mesh(connector_geometry, system.strand_to_material(locstrandID));
-                group.children[SP_CON].applyMatrix(new THREE.Matrix4().makeScale(1.0, sp_len, 1.0)); //length
-                group.children[SP_CON].applyMatrix(rotation_sp); //rotate
-                group.children[SP_CON].position.set(x_sp, y_sp, z_sp); //set position
-                group.children[SP_CON].parent = current_nucleotide.visual_object;
->>>>>>> parent of ad87fb1... Trajectory doesn't create new sp every time now - only updates existing
             };
             if (current_nucleotide.neighbor5 == null) {
                 system.system_3objects.add(current_strand.strand_3objects); //add strand_3objects to system_3objects
