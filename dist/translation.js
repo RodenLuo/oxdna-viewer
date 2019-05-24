@@ -29,6 +29,7 @@ for (let i = 0, len = sz.length; i < len; i++) {
         getScopeMode();
     };
 }
+<<<<<<< HEAD
 // get list of checkboxes with name 'action'
 var sz = document.forms['Action'].elements['action']; //form id = 'Action'; checkbox name = 'action'
 // loop through list
@@ -40,6 +41,11 @@ for (let i = 0, len = sz.length; i < len; i++) {
             drag();
         }
     };
+=======
+function setAngle() {
+    angle = document.getElementById("rotAngle").valueAsNumber * Math.PI / 180;
+    console.log(angle);
+>>>>>>> parent of ad87fb1... Trajectory doesn't create new sp every time now - only updates existing
 }
 let dragControls; //dragging functionality
 function drag() {
