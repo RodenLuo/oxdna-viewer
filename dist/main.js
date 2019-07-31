@@ -769,6 +769,41 @@ function updatePos() {
         systems[h].pos = syscms.clone(); //set system object position to system cms
     }
 }
+function updatePosOld() {
+    for (let h = 0; h < systems.length; h++) {
+        let cmssys = new THREE.Vector3();
+        let n = systems[h].system_length();
+        for (let i = 0; i < systems[h].children.length; i++) { //each strand
+            let n1 = systems[h].children[i].children.length;
+            let cms = new THREE.Vector3();
+            for (let j = 0; j < n1; j++) { //each group
+                let rotobj = systems[h].children[i].children[j];
+                let n2 = rotobj.children.length;
+                let cms1 = new THREE.Vector3(), currentpos = new THREE.Vector3();
+                cms.add(rotobj.children[3].position);
+                cms1 = rotobj.children[3].position;
+                let cmsx = cms1.x, cmsy = cms1.y, cmsz = cms1.z;
+                cmssys.add(rotobj.children[3].position);
+                for (let k = 0; k < n2; k++) {
+                    rotobj.children[k].applyMatrix(new THREE.Matrix4().makeTranslation(-cmsx, -cmsy, -cmsz));
+                }
+                rotobj.applyMatrix(new THREE.Matrix4().makeTranslation(cmsx, cmsy, cmsz));
+            }
+            let mul = 1.0 / n1;
+            cms.multiplyScalar(mul);
+            for (let k = 0; k < n1; k++) {
+                systems[h].strands[i].children[k].applyMatrix(new THREE.Matrix4().makeTranslation(-cms.x, -cms.y, -cms.z));
+            }
+            systems[h].strands[i].applyMatrix(new THREE.Matrix4().makeTranslation(cms.x, cms.y, cms.z));
+        }
+        let mul = 1.0 / n;
+        cmssys.multiplyScalar(mul);
+        for (let k = 0; k < systems[h].children.length; k++) {
+            systems[h].children[k].applyMatrix(new THREE.Matrix4().makeTranslation(-cmssys.x, -cmssys.y, -cmssys.z));
+        }
+        systems[h].applyMatrix(new THREE.Matrix4().makeTranslation(cmssys.x, cmssys.y, cmssys.z));
+    }
+}
 function nextConfig() {
     if (next_reader.readyState == 1) { //0: nothing loaded 1: working 2: done
         return;

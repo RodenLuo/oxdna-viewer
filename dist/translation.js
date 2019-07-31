@@ -116,3 +116,51 @@ function rotate() {
     render();
     //});
 }
+function getRotObj(i) {
+    let rotobj;
+    let found = false;
+    if (scopeMode.includes("Nuc")) {
+        rotobj = elements[i];
+    }
+    else if (scopeMode.includes("Strand")) {
+        let nuctemp = elements[i];
+        rotobj = nuctemp.parent;
+    }
+    else if (scopeMode.includes("System")) {
+        let nuctemp = elements[i];
+        rotobj = nuctemp.parent.parent;
+    }
+    return rotobj;
+}
+function rotateOld() {
+    updatePosOld();
+    let sel = false;
+    selected_bases.forEach((base) => {
+        console.log("HERE");
+        let rotobj;
+        if (scopeMode.includes("Nuc")) {
+            rotobj = base;
+        }
+        else if (scopeMode.includes("Strand")) {
+            rotobj = base.parent;
+        }
+        else if (scopeMode.includes("System")) {
+            rotobj = base.parent.parent;
+        }
+        setAxisMode();
+        if (axisMode == "X") {
+            rotobj.rotateX(angle);
+        }
+        else if (axisMode == "Y") {
+            rotobj.rotateY(angle);
+        }
+        else {
+            rotobj.rotateZ(angle);
+        }
+        render();
+        sel = true;
+        if (!sel) {
+            alert("Please select an object to rotate.");
+        }
+    });
+}

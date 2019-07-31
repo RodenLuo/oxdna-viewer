@@ -115,3 +115,95 @@ function rotate() { //rotate according to given angle given in number input
     //});
 }
 
+function getRotObj(i) {
+
+    let rotobj;
+
+    let found = false;
+
+    if (scopeMode.includes("Nuc")) {
+
+        rotobj = elements[i];
+
+    }
+
+    else if (scopeMode.includes("Strand")) {
+
+        let nuctemp: BasicElement = elements[i];
+
+        rotobj = nuctemp.parent;
+
+    }
+
+    else if (scopeMode.includes("System")) {
+
+        let nuctemp: BasicElement = elements[i];
+
+        rotobj = nuctemp.parent.parent;
+
+    }
+
+    return rotobj;
+
+}
+
+function rotateOld() {
+
+    updatePosOld();
+    let sel = false;
+    let i = 0;
+    selected_bases.forEach((base) => {
+
+        console.log("HERE");
+        let rotobj;
+        if (scopeMode.includes("Nuc")) {
+
+            rotobj = base;
+
+        }
+
+        else if (scopeMode.includes("Strand")) {
+
+            rotobj = base.parent;
+            i = rotobj.children.length;
+        }
+
+        else if (scopeMode.includes("System")) {
+
+            rotobj = base.parent.parent;
+            i = rotobj.children.length;
+
+        }
+
+        setAxisMode();
+
+        if (axisMode == "X") {
+
+            rotobj.rotateX(angle);
+
+        }
+
+        else if (axisMode == "Y") {
+
+            rotobj.rotateY(angle);
+
+        }
+
+        else {
+
+            rotobj.rotateZ(angle);
+
+        }
+
+        render();
+
+        sel = true;
+
+        if (!sel) {
+
+            alert("Please select an object to rotate.");
+
+        }
+    });
+
+}
