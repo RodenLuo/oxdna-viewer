@@ -164,7 +164,7 @@ class DatReader extends FileReader{
 
         }})(this.dat_file);
 
-    async get_next_conf(){
+    get_next_conf(){
         this.cur_conf = [];
         this.cur_conf.push(...this.leftover_conf);
         // read up a chunk 
@@ -188,7 +188,7 @@ class DatReader extends FileReader{
         console.log(
             strands
         );
-        await sleep(2000);
+        
 
         var current_strand = systems[sys_count][strands][0];
         let time = parseInt(lines[0].split(" ")[2]);
@@ -246,8 +246,4 @@ class DatReader extends FileReader{
     }
 
 
-}
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-  
+} 
