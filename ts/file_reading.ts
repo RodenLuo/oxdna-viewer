@@ -185,6 +185,24 @@ var approx_dat_len: number,
     box: number; //box size for system
 
 
+// open connection 
+// new  simulation
+var ws = new WebSocket('wss://localhost:8888');
+
+ws.onopen = (response) => {
+    console.log('connection to server established');
+    document.getElementById('relax_btn').removeAttribute("disabled");
+}
+ws.onclose = (response) => {
+    console.log('connection broke');
+    document.getElementById('relax_btn').setAttribute('disabled','true');
+}
+ws.onmessage = (response) =>{
+    let message = JSON.parse(response.data);
+    console.log(`${message}`);
+}
+
+
 target.addEventListener("drop", function (event) {
 
     // cancel default actions
@@ -221,9 +239,11 @@ target.addEventListener("drop", function (event) {
         let top_reader = new TopReader(top_file,system,elements);
         top_reader.read();
 
+        let dat_reader = new DatReader(dat_file, top_file, system, elements);
+        dat_reader.get_next_conf();
+        return;
         // asynchronously read the first two chunks of a configuration file
         if (dat_file) {
-            renderer.domElement.style.cursor = "wait";
             //anonymous functions to handle fileReader outputs
             dat_reader.onload = () => {
                 current_chunk = dat_reader.result as String;

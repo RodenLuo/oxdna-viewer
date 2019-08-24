@@ -162,6 +162,21 @@ previous_chunk, current_chunk, next_chunk, p_p_hanging_line, //Deal with bad lin
 p_hanging_line, c_hanging_line, n_hanging_line, dat_reader = new FileReader(), next_reader = new FileReader(), previous_reader = new FileReader(), //previous and previous_previous are basicaly the same...
 previous_previous_reader = new FileReader(), conf_begin = new marker, conf_end = new marker, conf_len, conf_num = 0, dat_fileout = "", dat_file, //currently var so only 1 dat_file stored for all systems w/ last uploaded system's dat
 box; //box size for system
+// open connection 
+// new  simulation
+var ws = new WebSocket('wss://localhost:8888');
+ws.onopen = (response) => {
+    console.log('connection to server established');
+    document.getElementById('relax_btn').removeAttribute("disabled");
+};
+ws.onclose = (response) => {
+    console.log('connection broke');
+    document.getElementById('relax_btn').setAttribute('disabled', 'true');
+};
+ws.onmessage = (response) => {
+    let message = JSON.parse(response.data);
+    console.log(`${message}`);
+};
 target.addEventListener("drop", function (event) {
     // cancel default actions
     event.preventDefault();
@@ -194,9 +209,11 @@ target.addEventListener("drop", function (event) {
         //read topology file
         let top_reader = new TopReader(top_file, system, elements);
         top_reader.read();
+        let dat_reader = new DatReader(dat_file, top_file, system, elements);
+        dat_reader.get_next_conf();
+        return;
         // asynchronously read the first two chunks of a configuration file
         if (dat_file) {
-            renderer.domElement.style.cursor = "wait";
             //anonymous functions to handle fileReader outputs
             dat_reader.onload = () => {
                 current_chunk = dat_reader.result;

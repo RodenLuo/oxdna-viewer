@@ -7,7 +7,9 @@ class TopReader extends FileReader {
             return (e) => {
                 let file = this.result;
                 let lines = file.split(/[\n]+/g);
+                console.log(`lines in top: ${lines.length}`);
                 lines = lines.slice(1); // discard the header
+                this.configuration_length = lines.length;
                 let l0 = lines[0].split(" "); //split the file and read each column, format is: "str_id base n3 n5"
                 let str_id = parseInt(l0[0]);
                 this.last_strand = str_id;
@@ -78,5 +80,54 @@ class TopReader extends FileReader {
     }
     read() {
         this.readAsText(this.top_file);
+    }
+}
+class FileChunker {
+    constructor(file, chunk_size) {
+        this.file = file;
+        this.chunk_size = chunk_size;
+        this.current_chunk = 0;
+    }
+    get_next_chunk() {
+        if (!this.is_last())
+            this.current_chunk++;
+        return this.get_chunk();
+    }
+    get_prev_chunk() {
+        this.current_chunk--;
+        if (this.current_chunk <= 0)
+            this.current_chunk = 0;
+        return this.get_chunk();
+    }
+    is_last() {
+        if (this.current_chunk * this.chunk_size + this.chunk_size >= this.file.size)
+            return true;
+        return false;
+    }
+    get_chunk() {
+        return this.file.slice(this.current_chunk * this.chunk_size, this.current_chunk * this.chunk_size + this.chunk_size);
+    }
+}
+class DatReader extends FileReader {
+    constructor(dat_file, top_reader, system, elements) {
+        super();
+        this.onload = ((f) => {
+            return (e) => {
+                let file = this.result;
+                let lines = file.split(/[\n]+/g);
+                if (lines.length - 3 < this.top_reader.configuration_length) {
+                }
+                //console.log(lines.length);
+            };
+        })(this.dat_file);
+        this.top_reader = top_reader;
+        this.dat_file = dat_file;
+        this.system = system;
+        this.elements = elements;
+        this.chunker = new FileChunker(this.dat_file, top_reader.top_file.size * 30);
+    }
+    get_next_conf() {
+        let chunk = this.chunker.get_next_chunk();
+        this.readAsText(chunk);
     }
 }
