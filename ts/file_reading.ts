@@ -237,10 +237,13 @@ target.addEventListener("drop", function (event) {
     if (top_file) {
         //read topology file
         let top_reader = new TopReader(top_file,system,elements);
-        top_reader.read();
+        top_reader.read().then(
+            ()=>{
+                let dat_reader = new DatReader(dat_file, top_reader, system, elements);
+                dat_reader.get_next_conf();
+            }
+        );
 
-        let dat_reader = new DatReader(dat_file, top_file, system, elements);
-        dat_reader.get_next_conf();
         return;
         // asynchronously read the first two chunks of a configuration file
         if (dat_file) {
@@ -478,7 +481,7 @@ function readDat(num_nuc, dat_reader, system, lutColsVis) {
         var current_nucleotide: BasicElement = elements[i+system.global_start_id];
         //get nucleotide information
         // consume a new line
-        let l: string = lines[i].split(" ");
+        let l: string[] = lines[i].split(" ");
         // shift coordinates such that the 1st base of the
         // 1st strand is @ origin
         let x = parseFloat(l[0]),// - fx,

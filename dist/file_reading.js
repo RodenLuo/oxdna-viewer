@@ -208,9 +208,10 @@ target.addEventListener("drop", function (event) {
     if (top_file) {
         //read topology file
         let top_reader = new TopReader(top_file, system, elements);
-        top_reader.read();
-        let dat_reader = new DatReader(dat_file, top_file, system, elements);
-        dat_reader.get_next_conf();
+        top_reader.read().then(() => {
+            let dat_reader = new DatReader(dat_file, top_reader, system, elements);
+            dat_reader.get_next_conf();
+        });
         return;
         // asynchronously read the first two chunks of a configuration file
         if (dat_file) {

@@ -53,7 +53,7 @@ class BasicElement extends THREE.Group{
         this.parent = parent;
     };
 
-    calculatePositions(x: number, y: number, z: number, l: string) {
+    calculatePositions(x: number, y: number, z: number, l: string[]) {
 
     };
     recalcPos() {
@@ -96,7 +96,7 @@ class Nucleotide extends BasicElement {
     constructor(global_id: number, parent: Strand) {
         super(global_id, parent);
     };
-    calculatePositions(x: number, y: number, z: number, l: string) {
+    calculatePositions(x: number, y: number, z: number, l: string[]) {
         // extract axis vector a1 (backbone vector) and a3 (stacking vector) 
         let x_a1 = parseFloat(l[3]),
             y_a1 = parseFloat(l[4]),
@@ -571,7 +571,7 @@ class AminoAcid extends BasicElement {
         else elem = Math.abs(elem);
         return nucleoside_materials[elem];
     };
-    calculatePositions(x: number, y: number, z: number, l: string) {
+    calculatePositions(x: number, y: number, z: number, l: string[]) {
         // adds a new "backbone", new "nucleoside", and new "connector" to the scene by adding to  then to strand_3objects then to system_3objects then to scene
         this.name = this.global_id + ""; //set name (string) to nucleotide's global id
         let backbone: THREE.Mesh;
