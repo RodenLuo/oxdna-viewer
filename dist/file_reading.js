@@ -159,9 +159,11 @@ target.addEventListener("dragover", function (event) {
 var approx_dat_len, current_chunk_number, //this is the chunk containing the end of the current conf
 previous_previous_chunk, //Space to store the chunks
 previous_chunk, current_chunk, next_chunk, p_p_hanging_line, //Deal with bad linebreaks caused by splitting the trajectory bitwise
-p_hanging_line, c_hanging_line, n_hanging_line, dat_reader = new FileReader(), next_reader = new FileReader(), previous_reader = new FileReader(), //previous and previous_previous are basicaly the same...
+p_hanging_line, c_hanging_line, n_hanging_line, 
+//dat_reader = new FileReader(),
+next_reader = new FileReader(), previous_reader = new FileReader(), //previous and previous_previous are basicaly the same...
 previous_previous_reader = new FileReader(), conf_begin = new marker, conf_end = new marker, conf_len, conf_num = 0, dat_fileout = "", dat_file, //currently var so only 1 dat_file stored for all systems w/ last uploaded system's dat
-box; //box size for system
+dat_reader, box; //box size for system
 // open connection 
 // new  simulation
 var ws = new WebSocket('wss://localhost:8888');
@@ -177,6 +179,7 @@ ws.onmessage = (response) => {
     let message = JSON.parse(response.data);
     console.log(`${message}`);
 };
+var ready = false;
 target.addEventListener("drop", function (event) {
     // cancel default actions
     event.preventDefault();
@@ -205,139 +208,153 @@ target.addEventListener("drop", function (event) {
         alert("Please drag and drop 1 .dat and 1 .top file. .json is optional.  More .jsons can be dropped individually later");
         return;
     }
-    if (top_file) {
+    if (top_file && dat_file) {
         //read topology file
-        let top_reader = new TopReader(top_file, system, elements);
-        top_reader.read().then(() => {
-            let dat_reader = new DatReader(dat_file, top_reader, system, elements);
+        let top_reader = new TopReader(top_file, system, elements, () => {
+            dat_reader = new DatReader(dat_file, top_reader, system, elements);
             dat_reader.get_next_conf();
         });
-        return;
-        // asynchronously read the first two chunks of a configuration file
-        if (dat_file) {
-            //anonymous functions to handle fileReader outputs
-            dat_reader.onload = () => {
-                current_chunk = dat_reader.result;
-                current_chunk_number = 0;
-                readDat(system.system_length(), dat_reader, system, lutColsVis);
-                document.dispatchEvent(new Event('nextConfigLoaded'));
-            };
-            //chunking bytewise often leaves incomplete lines, so cut off the beginning of the new chunk and append it to the chunk before
-            next_reader.onload = () => {
-                next_chunk = next_reader.result;
-                if (next_chunk == "") {
-                    document.dispatchEvent(new Event('finalConfig'));
-                    return;
-                }
-                n_hanging_line = "";
-                let c = "";
-                for (c = next_chunk.slice(0, 1); c != '\n'; c = next_chunk.slice(0, 1)) {
-                    n_hanging_line += c;
-                    next_chunk = next_chunk.substring(1);
-                }
-                try {
-                    current_chunk = current_chunk.concat(n_hanging_line);
-                }
-                catch (error) {
-                    alert("File readers got all topsy-turvy, traj reading will not work :( \n Please reload and try again");
-                }
-                next_chunk = next_chunk.substring(1);
-                conf_end.chunk = current_chunk;
-                // Signal that config has been loaded
-                document.dispatchEvent(new Event('nextConfigLoaded'));
-            };
-            previous_previous_reader.onload = () => {
-                previous_previous_chunk = previous_previous_reader.result;
-                if (previous_previous_chunk == "") {
-                    return;
-                }
-                p_p_hanging_line = "";
-                let c = "";
-                for (c = previous_previous_chunk.slice(0, 1); c != '\n'; c = previous_previous_chunk.slice(0, 1)) {
-                    p_p_hanging_line += c;
-                    previous_previous_chunk = previous_previous_chunk.substring(1);
-                }
-                previous_previous_chunk = previous_previous_chunk.substring(1);
-                previous_previous_chunk = previous_previous_chunk.concat(p_hanging_line);
-                conf_end.chunk = current_chunk;
-                // Signal that config has been loaded
-                document.dispatchEvent(new Event('nextConfigLoaded'));
-            };
-            // read the first chunk
-            if (dat_file && top_file) {
-                approx_dat_len = top_file.size * 30; //the relation between .top and a single .dat size is very variable, the largest I've found is 27x, although most are around 15x
-                let first_chunk_blob = dat_chunker(dat_file, 0, approx_dat_len);
-                dat_reader.readAsText(first_chunk_blob);
-                //if its a trajectory, read in the second chunk
-                if (dat_file.size > approx_dat_len) {
-                    let next_chunk_blob = dat_chunker(dat_file, 1, approx_dat_len);
-                    next_reader.readAsText(next_chunk_blob);
-                }
-            }
-            if (json_file) {
-                //lutColsVis = true;
-                let check_box = document.getElementById("lutToggle");
-                let json_reader = new FileReader(); //read .json
-                json_reader.onload = () => {
-                    let file = json_reader.result;
-                    let data = JSON.parse(file);
-                    let curr_sys;
-                    curr_sys = sys_count - 1;
-                    for (var key in data) {
-                        if (data[key].length == systems[curr_sys].system_length()) { //if json and dat files match/same length
-                            if (!isNaN(data[key][0])) { //we assume that scalars denote a new color map
-                                let min = Math.min.apply(null, data[key]), //find min and max
-                                max = Math.max.apply(null, data[key]);
-                                lut = new THREE.Lut("rainbow", 4000);
-                                //lut.setMax(0.23);
-                                //lut.setMin(0.04);
-                                lut.setMax(max);
-                                lut.setMin(min);
-                                let legend = lut.setLegendOn({ 'layout': 'horizontal', 'position': { 'x': 0, 'y': 10, 'z': 0 } }); //create legend
-                                scene.add(legend);
-                                let labels = lut.setLegendLabels({ 'title': key, 'ticks': 5 }); //set up legend format
-                                scene.add(labels['title']); //add title
-                                for (let i = 0; i < Object.keys(labels['ticks']).length; i++) { //add tick marks
-                                    scene.add(labels['ticks'][i]);
-                                    scene.add(labels['lines'][i]);
-                                }
-                                for (let i = 0; i < elements.length; i++) { //insert lut colors into lutCols[] to toggle Lut coloring later
-                                    lutCols.push(lut.getColor(Number(data[key][i])));
-                                }
-                                lutColsVis = false;
-                                toggleLut(check_box);
-                                check_box.checked = true;
-                            }
-                            if (data[key][0].length == 3) { //we assume that 3D vectors denote motion
-                                for (let i = 0; i < elements.length; i++) {
-                                    let vec = new THREE.Vector3(data[key][i][0], data[key][i][1], data[key][i][2]);
-                                    let len = vec.length();
-                                    vec.normalize();
-                                    let arrowHelper = new THREE.ArrowHelper(vec, elements[i][objects][elements[i].BACKBONE].position, len, 0x000000);
-                                    arrowHelper.name = i + "disp";
-                                    scene.add(arrowHelper);
-                                }
-                            }
-                        }
-                        else if (data[key][0].length == 6) { //draw arbitrary arrows on the scene
-                            for (let entry of data[key]) {
-                                let pos = new THREE.Vector3(entry[0], entry[1], entry[2]);
-                                let vec = new THREE.Vector3(entry[3], entry[4], entry[5]);
-                                vec.normalize();
-                                let arrowHelper = new THREE.ArrowHelper(vec, pos, 5 * vec.length(), 0x00000);
-                                scene.add(arrowHelper);
-                            }
-                        }
-                        else { //if json and dat files do not match, display error message and set files_len to 2 (not necessary)
-                            alert(".json and .top files are not compatible.");
-                        }
-                    }
-                };
-                json_reader.readAsText(json_file);
-                renderer.domElement.style.cursor = "auto";
-            }
-        }
+        //top_reader.onloadend  = (evt) => {
+        //    dat_reader.get_next_conf();          
+        //};
+        top_reader.read();
+        //var check = function() {
+        //    if (ready === true) {    
+        //        dat_reader = new DatReader(dat_file, top_reader, system, elements);
+        //        dat_reader.get_next_conf();
+        //        return;
+        //    }
+        //    setTimeout(check, 1000);
+        //}
+        //check();
+        //top_reader.onloadend = ()=>{
+        //dat_reader = new DatReader(dat_file, top_reader, system, elements);
+        //dat_reader.get_next_conf();
+        //};
     }
+    //     // asynchronously read the first two chunks of a configuration file
+    //     if (dat_file) {
+    //         //anonymous functions to handle fileReader outputs
+    //         dat_reader.onload = () => {
+    //             current_chunk = dat_reader.result as String;
+    //             current_chunk_number = 0;
+    //             readDat(system.system_length(), dat_reader, system, lutColsVis);
+    //             document.dispatchEvent(new Event('nextConfigLoaded'));
+    //         };
+    //         //chunking bytewise often leaves incomplete lines, so cut off the beginning of the new chunk and append it to the chunk before
+    //         next_reader.onload = () => {
+    //             next_chunk = next_reader.result as String;
+    //             if (next_chunk == "") {
+    //                 document.dispatchEvent(new Event('finalConfig'));
+    //                 return;
+    //             }
+    //             n_hanging_line = "";
+    //             let c = "";
+    //             for (c = next_chunk.slice(0, 1); c != '\n'; c = next_chunk.slice(0, 1)) {
+    //                 n_hanging_line += c;
+    //                 next_chunk = next_chunk.substring(1);
+    //             }
+    //             try {
+    //                 current_chunk = current_chunk.concat(n_hanging_line);
+    //             }
+    //             catch (error) {
+    //                 alert("File readers got all topsy-turvy, traj reading will not work :( \n Please reload and try again")
+    //             }
+    //             next_chunk = next_chunk.substring(1);
+    //             conf_end.chunk = current_chunk;
+    //             // Signal that config has been loaded
+    //             document.dispatchEvent(new Event('nextConfigLoaded'));
+    //         };
+    //         previous_previous_reader.onload = () => {
+    //             previous_previous_chunk = previous_previous_reader.result as String;
+    //             if (previous_previous_chunk == "") { return }
+    //             p_p_hanging_line = "";
+    //             let c = "";
+    //             for (c = previous_previous_chunk.slice(0, 1); c != '\n'; c = previous_previous_chunk.slice(0, 1)) {
+    //                 p_p_hanging_line += c;
+    //                 previous_previous_chunk = previous_previous_chunk.substring(1);
+    //             }
+    //             previous_previous_chunk = previous_previous_chunk.substring(1);
+    //             previous_previous_chunk = previous_previous_chunk.concat(p_hanging_line);
+    //             conf_end.chunk = current_chunk;
+    //             // Signal that config has been loaded
+    //             document.dispatchEvent(new Event('nextConfigLoaded'));
+    //         };
+    //         // read the first chunk
+    //         if (dat_file && top_file) {
+    //             approx_dat_len = top_file.size * 30; //the relation between .top and a single .dat size is very variable, the largest I've found is 27x, although most are around 15x
+    //             let first_chunk_blob = dat_chunker(dat_file, 0, approx_dat_len);
+    //             dat_reader.readAsText(first_chunk_blob);
+    //             //if its a trajectory, read in the second chunk
+    //             if (dat_file.size > approx_dat_len) {
+    //                 let next_chunk_blob = dat_chunker(dat_file, 1, approx_dat_len);
+    //                 next_reader.readAsText(next_chunk_blob);
+    //             }
+    //         }
+    //         if (json_file) {
+    //             //lutColsVis = true;
+    //             let check_box = <HTMLInputElement>document.getElementById("lutToggle");
+    //             let json_reader = new FileReader(); //read .json
+    //             json_reader.onload = () => {
+    //                 let file = json_reader.result as string;
+    //                 let data = JSON.parse(file);
+    //                 let curr_sys;
+    //                 curr_sys = sys_count - 1;
+    //                 for (var key in data) {
+    //                     if (data[key].length == systems[curr_sys].system_length()) { //if json and dat files match/same length
+    //                         if (!isNaN(data[key][0])) { //we assume that scalars denote a new color map
+    //                             let min = Math.min.apply(null, data[key]), //find min and max
+    //                                 max = Math.max.apply(null, data[key]);
+    //                             lut = new THREE.Lut("rainbow", 4000);
+    //                             //lut.setMax(0.23);
+    //                             //lut.setMin(0.04);
+    //                             lut.setMax(max);
+    //                             lut.setMin(min);
+    //                             let legend = lut.setLegendOn({ 'layout': 'horizontal', 'position': { 'x': 0, 'y': 10, 'z': 0 } }); //create legend
+    //                             scene.add(legend);
+    //                             let labels = lut.setLegendLabels({ 'title': key, 'ticks': 5 }); //set up legend format
+    //                             scene.add(labels['title']); //add title
+    //                             for (let i = 0; i < Object.keys(labels['ticks']).length; i++) { //add tick marks
+    //                                 scene.add(labels['ticks'][i]);
+    //                                 scene.add(labels['lines'][i]);
+    //                             }
+    //                             for (let i = 0; i < elements.length; i++) { //insert lut colors into lutCols[] to toggle Lut coloring later
+    //                                 lutCols.push(lut.getColor(Number(data[key][i])));
+    //                             }
+    //                             lutColsVis = false;
+    //                             toggleLut(check_box);
+    //                             check_box.checked = true;
+    //                         }
+    //                         if (data[key][0].length == 3) { //we assume that 3D vectors denote motion
+    //                             for (let i = 0; i < elements.length; i++) {
+    //                                 let vec = new THREE.Vector3(data[key][i][0], data[key][i][1], data[key][i][2]);
+    //                                 let len = vec.length();
+    //                                 vec.normalize();
+    //                                 let arrowHelper = new THREE.ArrowHelper(vec, elements[i][objects][elements[i].BACKBONE].position, len, 0x000000);
+    //                                 arrowHelper.name = i + "disp";
+    //                                 scene.add(arrowHelper);
+    //                             }
+    //                         }
+    //                     }
+    //                     else if (data[key][0].length == 6) { //draw arbitrary arrows on the scene
+    //                         for (let entry of data[key]) {
+    //                             let pos = new THREE.Vector3(entry[0], entry[1], entry[2]);
+    //                             let vec = new THREE.Vector3(entry[3], entry[4], entry[5]);
+    //                             vec.normalize();
+    //                             let arrowHelper = new THREE.ArrowHelper(vec, pos, 5 * vec.length(), 0x00000);
+    //                             scene.add(arrowHelper);
+    //                         }
+    //                     }
+    //                     else { //if json and dat files do not match, display error message and set files_len to 2 (not necessary)
+    //                         alert(".json and .top files are not compatible.");
+    //                     }
+    //                 }
+    //             };
+    //             json_reader.readAsText(json_file);
+    //             renderer.domElement.style.cursor = "auto";
+    //         }
+    //     }
+    // }
     if (json_file && json_alone) {
         //lutColsVis = true;
         let check_box = document.getElementById("lutToggle");

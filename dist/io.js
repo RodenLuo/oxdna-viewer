@@ -1,13 +1,12 @@
 /// <reference path="./three/index.d.ts" />
 class TopReader extends FileReader {
-    constructor(top_file, system, elements) {
+    constructor(top_file, system, elements, callback) {
         super();
         this.nuc_local_id = 0;
         this.onload = ((f) => {
             return (e) => {
                 let file = this.result;
                 let lines = file.split(/[\n]+/g);
-                console.log(`lines in top: ${lines.length}`);
                 lines = lines.slice(1); // discard the header
                 this.configuration_length = lines.length;
                 let l0 = lines[0].split(" "); //split the file and read each column, format is: "str_id base n3 n5"
@@ -72,11 +71,14 @@ class TopReader extends FileReader {
                 systems.push(this.system); //add system to Systems[]
                 nuc_count = this.elements.length;
                 conf_len = nuc_count + 3;
+                //Fire callback funciton
+                this.callback();
             };
         })(this.top_file);
         this.top_file = top_file;
         this.system = system;
         this.elements = elements;
+        this.callback = callback;
     }
     async read() {
         this.readAsText(this.top_file);
@@ -111,14 +113,7 @@ class FileChunker {
 class DatReader extends FileReader {
     constructor(dat_file, top_reader, system, elements) {
         super();
-        this.onload = ((f) => {
-            return (e) => {
-                let file = this.result;
-                let lines = file.split(/[\n]+/g);
-                this.cur_conf.push(...lines);
-                //console.log(lines.length);
-            };
-        })(this.dat_file);
+        this.first_load = true;
         this.top_reader = top_reader;
         this.dat_file = dat_file;
         this.system = system;
@@ -127,36 +122,49 @@ class DatReader extends FileReader {
         this.conf_length = this.top_reader.configuration_length + 3;
         this.leftover_conf = [];
     }
-    async get_next_conf() {
+    get_next_conf() {
         this.cur_conf = [];
         this.cur_conf.push(...this.leftover_conf);
         // read up a chunk 
         this.readAsText(this.chunker.get_next_chunk());
-        // we have to little, need to get more 
-        if (this.cur_conf.length < this.conf_length)
-            this.readAsText(this.chunker.get_next_chunk());
-        //else{
-        //    alert(".dat and .top files incompatible")
-        //    return;
-        //}
-        // now make sure we have the right ammount of stuff in cur_conf
-        this.leftover_conf = this.cur_conf.slice(this.conf_length);
+        //as we are a FileReader we are self sufficient... 
+        this.onload = (evt) => {
+            let file = this.result;
+            if (file == "") {
+                document.dispatchEvent(new Event('finalConfig'));
+                return;
+            }
+            let lines = file.split(/[\n]+/g);
+            this.cur_conf.push(...lines);
+            console.log("bla:", lines.length);
+            // we have to little, need to get more 
+            if (this.cur_conf.length < this.conf_length) {
+                this.readAsText(this.chunker.get_next_chunk());
+                return; // do the game again ;0)
+            }
+            // now make sure we have the right ammount of stuff in cur_conf
+            this.leftover_conf = this.cur_conf.slice(this.conf_length);
+            //now fire off parsing 
+            this.parse_conf();
+        };
+    }
+    parse_conf() {
         //now do the parsing 
-        let lines = this.cur_conf;
-        console.log(sys_count);
-        console.log(strands);
-        await sleep(2000);
+        let lines = [...this.cur_conf];
         var current_strand = systems[sys_count][strands][0];
         let time = parseInt(lines[0].split(" ")[2]);
         box = parseFloat(lines[1].split(" ")[3]);
-        // discard the header
-        lines = lines.slice(3);
+        lines = lines.slice(3); // discard the header
+        //0,1,2 are part of the header 
         for (let i = 0; i < this.top_reader.configuration_length; i++) { //from beginning to end of current configuration's list of positions; for each nucleotide in the system
-            if (lines[i] == "" || lines[i].slice(0, 1) == 't') {
+            //console.log(i, );
+            if (lines[i] == "") { //|| lines[i].slice(0, 1) == 't') {
+                //console.log("was here ");
                 break;
             }
             ;
-            var current_nucleotide = elements[i + this.system.global_start_id];
+            let cur_nuc_idx = i + this.system.global_start_id;
+            let current_nucleotide = elements[cur_nuc_idx];
             //get nucleotide information
             // consume a new line
             let l = lines[i].split(" ");
@@ -167,6 +175,8 @@ class DatReader extends FileReader {
             z = parseFloat(l[2]); // - fz;
             //current_nucleotide.pos = new THREE.Vector3(x, y, z); //set pos; not updated by DragControls
             current_nucleotide.calculatePositions(x, y, z, l);
+            //setup connectors and other stuff
+            //if(this.first_load){
             //catch the two possible cases for strand ends (no connection or circular)
             if ((current_nucleotide.neighbor5 == undefined || current_nucleotide.neighbor5 == null) || (current_nucleotide.neighbor5.local_id < current_nucleotide.local_id)) { //if last nucleotide in straight strand
                 this.system.add(current_strand); //add strand THREE.Group to system THREE.Group
@@ -175,21 +185,19 @@ class DatReader extends FileReader {
                     current_strand = elements[current_nucleotide.global_id + 1].parent;
                 }
             }
-        }
-        for (let i = 0; i < elements.length; i++) {
-            elements[i].recalcPos(); //add any other sp connectors - used for circular strands
+            //add any other sp connectors - used for circular strands
+            current_nucleotide.recalcPos();
+            //create array of backbone sphere Meshes for base_selector
+            backbones.push(elements[cur_nuc_idx][objects][elements[cur_nuc_idx].BACKBONE]);
+            //    this.first_load = false;
+            //}
         }
         //bring things in the box based on the PBC/centering menus
         PBC_switchbox(systems[sys_count]);
-        for (let i = systems[sys_count].global_start_id; i < elements.length; i++) { //create array of backbone sphere Meshes for base_selector
-            backbones.push(elements[i][objects][elements[i].BACKBONE]);
-        }
         scene.add(systems[sys_count]); //add system_3objects with strand_3objects with visual_object with Meshes
         sys_count += 1;
         render();
+        document.dispatchEvent(new Event('nextConfigLoaded'));
         renderer.domElement.style.cursor = "auto";
     }
-}
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }
