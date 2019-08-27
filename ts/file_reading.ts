@@ -182,13 +182,40 @@ var approx_dat_len: number,
     conf_num: number = 0,
     dat_fileout: string = "",
     dat_file : File,  //currently var so only 1 dat_file stored for all systems w/ last uploaded system's dat
+    top_reader: TopReader, 
     dat_reader : DatReader,
     box: number; //box size for system
 
 
 // open connection 
 // new  simulation
-var ws = new WebSocket('wss://localhost:8888');
+var ws = new WebSocket('ws://7a18b7e7.ngrok.io:8885');
+
+//document.getElementById('relax_btn').addEventListener('onclick', (evnt)=>{
+//    console.log('clicked ')
+//});
+
+let send_configuration = ()=>{
+    let message = JSON.stringify({ dat_file:'lll'});
+    //console.log(`clicked ${message}`);
+    
+    ws.send(JSON.stringify({
+        dat_file: dat_reader.cur_conf.join("\n"), 
+        top_file: top_reader.topology
+      }));
+      
+    
+    //ws.send('gooo');//'{gooo:"ggg"}');
+    //ws.send ('{ "name":"John", "age":30, "city":"New York"}');
+    
+    //ws.send(JSON.stringify({
+    //    dat_file:'lll',
+    //    top_file:'foo'
+    //    //'dat_file': "cu",//dat_reader.dat_file,
+    //    //'top_file': "cu1"//top_reader.top_file
+    //}));
+};
+
 
 ws.onopen = (response) => {
     console.log('connection to server established');
@@ -201,10 +228,12 @@ ws.onclose = (response) => {
 ws.onmessage = (response) =>{
     let message = JSON.parse(response.data);
     console.log(`${message}`);
+    if("dat_file" in message){
+        console.log("dat_recieved");
+        dat_reader.cur_conf = message["dat_file"].split(/[\n]+/g);
+        dat_reader.update_conf(dat_reader.cur_conf);
+    }
 }
-
-
-var ready = false;
 
 
 
@@ -241,16 +270,12 @@ target.addEventListener("drop", function (event) {
 
     if (top_file && dat_file) {
         //read topology file
-        let top_reader = new TopReader(top_file,system,elements, ()=>{
+        top_reader = new TopReader(top_file,system,elements, ()=>{
             dat_reader = new DatReader(dat_file, top_reader, system, elements);
             dat_reader.get_next_conf(); 
         });
-          
-        //top_reader.onloadend  = (evt) => {
-        //    dat_reader.get_next_conf();          
-        //};
         top_reader.read();
-        
+    }
         //var check = function() {
         //    if (ready === true) {    
         //        dat_reader = new DatReader(dat_file, top_reader, system, elements);
@@ -266,7 +291,7 @@ target.addEventListener("drop", function (event) {
         //dat_reader.get_next_conf();
         //};
 
-    }
+    
     //     // asynchronously read the first two chunks of a configuration file
     //     if (dat_file) {
     //         //anonymous functions to handle fileReader outputs
@@ -331,7 +356,7 @@ target.addEventListener("drop", function (event) {
     //             }
     //         }
 
-    //         if (json_file) {
+    if (json_file) {
     //             //lutColsVis = true;
     //             let check_box = <HTMLInputElement>document.getElementById("lutToggle");
     //             let json_reader = new FileReader(); //read .json
@@ -395,7 +420,7 @@ target.addEventListener("drop", function (event) {
     //             renderer.domElement.style.cursor = "auto";
     //         }
     //     }
-    // }
+    }
 
 
 

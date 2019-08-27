@@ -10,6 +10,7 @@ class TopReader extends FileReader{
     neighbor3: number;
     configuration_length:number;
     callback:Function;
+    topology:string;
 
 
     constructor(top_file: File, system :System, elements: BasicElement[], callback : Function){
@@ -22,6 +23,7 @@ class TopReader extends FileReader{
     onload = ((f) => {
         return (e) => {
             let file = this.result as string
+            this.topology = file;
             let lines = file.split(/[\n]+/g);
             lines = lines.slice(1); // discard the header
             this.configuration_length = lines.length;
@@ -154,7 +156,7 @@ class DatReader extends FileReader{
         this.system = system;
         this.elements = elements;
         this.chunker = new FileChunker(this.dat_file, top_reader.top_file.size * 30);
-        this.conf_length = this.top_reader.configuration_length+3;
+        this.conf_length = this.top_reader.configuration_length+3; //TODO: messed up, figure out 
         this.leftover_conf = [];
     }
     
@@ -174,7 +176,7 @@ class DatReader extends FileReader{
             }
             let lines = file.split(/[\n]+/g);
             this.cur_conf.push(...lines);
-            console.log("bla:",lines.length)
+            //console.log("bla:",lines.length)
 
             // we have to little, need to get more 
             if(this.cur_conf.length < this.conf_length){
@@ -187,7 +189,7 @@ class DatReader extends FileReader{
             this.parse_conf();
         };
     }
-    private  parse_conf(){
+    private parse_conf(){
         
         //now do the parsing 
         let lines = [...this.cur_conf];
@@ -221,7 +223,7 @@ class DatReader extends FileReader{
             current_nucleotide.calculatePositions(x, y, z, l);
 
             //setup connectors and other stuff
-            //if(this.first_load){
+            if(this.first_load){
                 //catch the two possible cases for strand ends (no connection or circular)
                 if ((current_nucleotide.neighbor5 == undefined || current_nucleotide.neighbor5 == null) || (current_nucleotide.neighbor5.local_id < current_nucleotide.local_id)) { //if last nucleotide in straight strand
                     this.system.add(current_strand); //add strand THREE.Group to system THREE.Group
@@ -230,12 +232,12 @@ class DatReader extends FileReader{
                         current_strand = elements[current_nucleotide.global_id+1].parent;
                     }
                 }
-                //add any other sp connectors - used for circular strands
-                current_nucleotide.recalcPos();    
-                //create array of backbone sphere Meshes for base_selector
-                backbones.push(elements[cur_nuc_idx][objects][elements[cur_nuc_idx].BACKBONE]);
-            //    this.first_load = false;
-            //}
+                    //add any other sp connectors - used for circular strands
+                    current_nucleotide.recalcPos();    
+                    //create array of backbone sphere Meshes for base_selector
+                    backbones.push(elements[cur_nuc_idx][objects][elements[cur_nuc_idx].BACKBONE]);
+                    this.first_load = false;
+            }
         }
     
         //bring things in the box based on the PBC/centering menus
@@ -245,6 +247,39 @@ class DatReader extends FileReader{
         render();      
         document.dispatchEvent(new Event('nextConfigLoaded'));
         renderer.domElement.style.cursor = "auto";  
+        //this.cur_conf.join("");
         
     }
+
+    update_conf(lines){
+        let box = parseFloat(lines[1].split(" ")[3]);
+        let time = parseInt(lines[0].split(" ")[2]);
+        console.log(conf_num, 't =', time);
+        // discard the header
+        lines = lines.slice(3);
+        let global_start_id = 0;
+        for (let line_num = 0; line_num < this.top_reader.configuration_length; line_num++) {
+            if (lines[line_num] == "" || undefined) {
+                //alert("There's an empty line in the middle of your configuration!")
+                break
+            };
+            let current_nucleotide = elements[systems[0].global_start_id+line_num];
+            //get nucleotide information
+            // consume a new line
+            let l = lines[line_num].split(" ");
+            let x = parseFloat(l[0]),
+                y = parseFloat(l[1]),
+                z = parseFloat(l[2]);
+            current_nucleotide.pos = new THREE.Vector3(x, y, z);
+            current_nucleotide.calculateNewConfigPositions(x, y, z, l);
+        }
+
+        //bring things in box based on the PBC/centering menus
+        PBC_switchbox(this.system);
+        render();
+        
+    }
+
+
+
 } 
