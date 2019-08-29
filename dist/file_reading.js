@@ -166,7 +166,7 @@ previous_previous_reader = new FileReader(), conf_begin = new marker, conf_end =
 top_reader, dat_reader, box; //box size for system
 // open connection 
 // new  simulation
-var ws = new WebSocket('ws://7a18b7e7.ngrok.io:8885');
+var ws = new WebSocket('wss://localhost:8888');
 //document.getElementById('relax_btn').addEventListener('onclick', (evnt)=>{
 //    console.log('clicked ')
 //});
@@ -199,8 +199,8 @@ ws.onmessage = (response) => {
     console.log(`${message}`);
     if ("dat_file" in message) {
         console.log("dat_recieved");
-        dat_reader.cur_conf = message["dat_file"].split(/[\n]+/g);
-        dat_reader.update_conf(dat_reader.cur_conf);
+        //dat_reader.cur_conf = message["dat_file"].split(/[\n]+/g);
+        dat_reader.update_conf(message["dat_file"].split(/[\n]+/g));
     }
 };
 target.addEventListener("drop", function (event) {
