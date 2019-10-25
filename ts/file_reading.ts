@@ -164,13 +164,17 @@ function readFiles(topFile: File, datFile: File, jsonFile?: File) {
             renderer.domElement.style.cursor = "wait";
             //anonymous functions to handle fileReader outputs
             datReader.onload = () => {
-                readDat(system.systemLength(), datReader, system);
-                document.dispatchEvent(new Event('nextConfigLoaded'));
-                //if its a trajectory, create the other readers
-                if (datFile.size > approxDatLen) {
-                
-                    trajReader = new TrajectoryReader(datFile, system, approxDatLen, datReader.result);
+                let successful: boolean = readDat(system.systemLength(), datReader, system);
+                if (successful) {
+                    document.dispatchEvent(new Event('nextConfigLoaded'));
+                    //if its a trajectory, create the other readers
+                    if (datFile.size > approxDatLen) {
+
+                        trajReader = new TrajectoryReader(datFile, system, approxDatLen, datReader.result);
+                    }
                 }
+                else
+                    return;
             };
             
             let approxDatLen = topFile.size * 30; //the relation between .top and a single .dat size is very variable, the largest I've found is 27x, although most are around 15x
@@ -194,13 +198,21 @@ let xbbLast,
     ybbLast,
     zbbLast;
 
-function readDat(numNuc, datReader, system) {
+function readDat(numNuc, datReader, system): boolean {
     let currentStrand = systems[sysCount][strands][0];
     // parse file into lines
     let lines = datReader.result.split(/[\n]+/g);
     if (lines.length-3 < numNuc) { //Handles dat files that are too small.  can't handle too big here because you don't know if there's a trajectory
-        notify(".dat and .top files incompatible")
-        return
+        notify(".dat and .top files incompatible");
+        console.log("?:" + systems[systems.length - 1].systemLength());
+        for (let i: number = 0; i < numNuc; i++) {
+            elements.pop();
+        }
+        nucCount = elements.length;
+        //confLen = nucCount + 3;
+        systems.pop();
+        sysCount = systems.length;
+        return false;
     }
     //get the simulation box size
     box = parseFloat(lines[1].split(" ")[3]);
@@ -237,6 +249,7 @@ function readDat(numNuc, datReader, system) {
 
     }
     addSystemToScene(system);
+    return true;
 }
 
 function readJson(system, jsonReader) {

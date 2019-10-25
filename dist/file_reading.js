@@ -136,12 +136,16 @@ function readFiles(topFile, datFile, jsonFile) {
             renderer.domElement.style.cursor = "wait";
             //anonymous functions to handle fileReader outputs
             datReader.onload = () => {
-                readDat(system.systemLength(), datReader, system);
-                document.dispatchEvent(new Event('nextConfigLoaded'));
-                //if its a trajectory, create the other readers
-                if (datFile.size > approxDatLen) {
-                    trajReader = new TrajectoryReader(datFile, system, approxDatLen, datReader.result);
+                let successful = readDat(system.systemLength(), datReader, system);
+                if (successful) {
+                    document.dispatchEvent(new Event('nextConfigLoaded'));
+                    //if its a trajectory, create the other readers
+                    if (datFile.size > approxDatLen) {
+                        trajReader = new TrajectoryReader(datFile, system, approxDatLen, datReader.result);
+                    }
                 }
+                else
+                    return;
             };
             let approxDatLen = topFile.size * 30; //the relation between .top and a single .dat size is very variable, the largest I've found is 27x, although most are around 15x
             // read the first chunk
@@ -165,7 +169,15 @@ function readDat(numNuc, datReader, system) {
     let lines = datReader.result.split(/[\n]+/g);
     if (lines.length - 3 < numNuc) { //Handles dat files that are too small.  can't handle too big here because you don't know if there's a trajectory
         notify(".dat and .top files incompatible");
-        return;
+        console.log("?:" + systems[systems.length - 1].systemLength());
+        for (let i = 0; i < numNuc; i++) {
+            elements.pop();
+        }
+        nucCount = elements.length;
+        //confLen = nucCount + 3;
+        systems.pop();
+        sysCount = systems.length;
+        return false;
     }
     //get the simulation box size
     box = parseFloat(lines[1].split(" ")[3]);
@@ -196,6 +208,7 @@ function readDat(numNuc, datReader, system) {
         }
     }
     addSystemToScene(system);
+    return true;
 }
 function readJson(system, jsonReader) {
     const file = jsonReader.result;
@@ -240,14 +253,16 @@ function readJson(system, jsonReader) {
     }
 }
 function addSystemToScene(system) {
-    //instancing note: if you make any modifications to the drawing matricies here, they will take effect before anything draws
-    //however, if you want to change once stuff is already drawn, you need to add "<attribute>.needsUpdate" before the render() call.
-    //This will force the gpu to check the vectors again when redrawing.
+    // If you make any modifications to the drawing matricies here, they will take effect before anything draws
+    // however, if you want to change once stuff is already drawn, you need to add "<attribute>.needsUpdate" before the render() call.
+    // This will force the gpu to check the vectors again when redrawing.
+    // Add the geometries to the systems
     system.backboneGeometry = instancedBackbone.clone();
     system.nucleosideGeometry = instancedNucleoside.clone();
     system.connectorGeometry = instancedConnector.clone();
     system.spGeometry = instancedBBconnector.clone();
     system.pickingGeometry = instancedBackbone.clone();
+    // Feed data arrays to the geometries
     system.backboneGeometry.addAttribute('instanceOffset', new THREE.InstancedBufferAttribute(system.bbOffsets, 3));
     system.backboneGeometry.addAttribute('instanceRotation', new THREE.InstancedBufferAttribute(system.bbRotation, 4));
     system.backboneGeometry.addAttribute('instanceColor', new THREE.InstancedBufferAttribute(system.bbColors, 3));
@@ -271,6 +286,7 @@ function addSystemToScene(system) {
     system.pickingGeometry.addAttribute('idcolor', new THREE.InstancedBufferAttribute(system.bbLabels, 3));
     system.pickingGeometry.addAttribute('instanceOffset', new THREE.InstancedBufferAttribute(system.bbOffsets, 3));
     system.pickingGeometry.addAttribute('instanceVisibility', new THREE.InstancedBufferAttribute(system.visibility, 3));
+    // Those were geometries, the mesh is actually what gets drawn
     system.backbone = new THREE.Mesh(system.backboneGeometry, instanceMaterial);
     system.backbone.frustumCulled = false; //you have to turn off culling because instanced materials all exist at (0, 0, 0)
     system.nucleoside = new THREE.Mesh(system.nucleosideGeometry, instanceMaterial);
@@ -281,17 +297,19 @@ function addSystemToScene(system) {
     system.bbconnector.frustumCulled = false;
     system.dummyBackbone = new THREE.Mesh(system.pickingGeometry, pickingMaterial);
     system.dummyBackbone.frustumCulled = false;
+    // Add everything to the scene
     scene.add(system.backbone);
     scene.add(system.nucleoside);
     scene.add(system.connector);
     scene.add(system.bbconnector);
     pickingScene.add(system.dummyBackbone);
-    //bring things in the box based on the PBC/centering menus
+    // Bring things in the box based on the PBC/centering menus
     PBCswitchbox(system);
     if (toggleFailure) {
         setColoringMode("Overlay");
     }
     sysCount += 1;
     render();
+    // Reset the cursor from the loading spinny
     renderer.domElement.style.cursor = "auto";
 }

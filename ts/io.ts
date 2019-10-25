@@ -114,7 +114,7 @@ class TopReader extends FileReader{
 
             this.system.bbLabels = new Float32Array(this.system.INSTANCES * 3);
 
-            return confLen
+            return confLen;
 
         }})(this.topFile);
     
