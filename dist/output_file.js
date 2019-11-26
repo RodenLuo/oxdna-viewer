@@ -1,3 +1,13 @@
+function exportGLTF() {
+    var exporter = new THREE.GLTFExporter();
+    var options = { 'forceIndices': true };
+    // Parse the input and generate the glTF output
+    exporter.parse(scene, function (result) {
+        var output = JSON.stringify(result, null, 2);
+        console.log(output);
+        makeTextFile('scene.gltf', output);
+    }, options);
+}
 function makeOutputFiles() {
     let strand_len = makeTopFile();
     makeDatFile(strand_len);

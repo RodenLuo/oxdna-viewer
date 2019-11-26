@@ -95,6 +95,7 @@
 		<div id="Nucleotides" class="tabcontent">
 			<!--in "Nucloetides" tab-->
 			<textarea id="BaseList" cols="25" rows="3" name="textarea" readonly> Selected Bases List </textarea>
+			<button onclick="exportGLTF()" type="button">Export GLTF</button>
 			<button onclick="makeSelectedBasesFile()" type="button">Download Selected Base List</button>
 			<button onclick="makeMutualTrapFile()" type="button">Make Mutual Trap File</button>
 			Resolution: <input id="resolution" onchange="setResolution(this.value)" type="number" min="1" value="10" width="3">
@@ -180,6 +181,7 @@
 			<script src="./ts/lib/CCapture.all.min.js"></script>
 			<script src="./ts/lib/three.js"></script>
 			<script src="./ts/lib/Lut.js"></script>
+			<script src="./ts/lib/GLTFExporter.js"></script>
 			<script src="./ts/controls/DragControls.js"></script>
 			<script src="./ts/controls/TrackballControls.js"></script>
 			<script src="./dist/scene_setup.js"></script>
