@@ -2,3 +2,4 @@
 .vscode/
 .cache/
 .ts/.vscode
+*.DS_Store
