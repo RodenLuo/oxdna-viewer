@@ -380,7 +380,9 @@
                 return(false);
             }
             var topo = getQueryVariable("topo");
+            topo = "upload/topo.top";
             var conf = getQueryVariable("conf");
+            conf = "upload/config.conf";
             // readFilesFromPath("upload/topo.top", "upload/config.conf");
             readFilesFromPath(topo, conf);
         </script>
