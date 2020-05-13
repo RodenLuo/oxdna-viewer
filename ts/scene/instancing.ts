@@ -115,7 +115,7 @@ THREE.ShaderLib.lambert = { // this is a cut-and-paste of the lambert shader -- 
 			// vertex colors instanced
 			#ifdef INSTANCED
 				#ifdef USE_COLOR
-					vColor.xyz = instanceColor.xyz;
+					vColor.rgb = instanceColor.rgb;
 				#endif
 			#endif
 

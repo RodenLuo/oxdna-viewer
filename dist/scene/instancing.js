@@ -106,7 +106,7 @@ THREE.ShaderLib.lambert = {
 			// vertex colors instanced
 			#ifdef INSTANCED
 				#ifdef USE_COLOR
-					vColor.xyz = instanceColor.xyz;
+					vColor.rgb = instanceColor.rgb;
 				#endif
 			#endif
 

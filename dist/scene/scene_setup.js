@@ -60,7 +60,7 @@ const BLACK = new THREE.Color(0x000000);
 const WHITE = new THREE.Color();
 const scene = new THREE.Scene();
 scene.background = WHITE;
-camera = createPerspectiveCamera(45, 0.1, 999999, [100, 100, 100]); //create camera
+camera = createPerspectiveCamera(45, 0.1, 999999, [100, 0, 0]); //create camera
 const refQ = camera.quaternion.clone();
 // Create canvas and renderer
 const canvas = document.getElementById("threeCanvas");
