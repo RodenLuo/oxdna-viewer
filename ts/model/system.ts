@@ -35,7 +35,7 @@ class System {
 
     bbLabels: Float32Array;
 
-    backboneGeometry: THREE.InstancedBufferGeometry;
+    backboneGeometry: THREE.BufferGeometry;
     nucleosideGeometry: THREE.InstancedBufferGeometry;
     connectorGeometry: THREE.InstancedBufferGeometry;
     spGeometry: THREE.InstancedBufferGeometry;

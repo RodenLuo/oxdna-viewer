@@ -1,7 +1,15 @@
 /// <reference path="../typescript_definitions/index.d.ts" />
 
+function createBufferGeometrySphere() {
+   var geometry = new THREE.BufferGeometry();
+   
+   return geometry;
+}
+
 // The initial set up of the instanced objects.
 // Objects can be deformed by parameters sent to the instanceScale parameter of the instance
+var instancedBackbone_impostor = createBufferGeometrySphere();
+
 var instancedBackbone = new THREE.InstancedBufferGeometry();
 instancedBackbone.copy(new THREE.SphereBufferGeometry(.2,10,10) as unknown as THREE.InstancedBufferGeometry); //don't worry about those type conversion, just trying to keep tsc happy
 
