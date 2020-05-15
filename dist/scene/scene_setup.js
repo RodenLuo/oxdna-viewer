@@ -6,6 +6,11 @@
 //document.body.append(
 //    stats.dom
 //);
+var bachbone_impostor_geometry = createBufferGeometrySphere();
+var nucleosideGeometry_impostor = createBufferGeometrySphere();
+var connectorGeometry_impostor = createBufferGeometryCyl();
+var spGeometry_impostor = createBufferGeometryCyl();
+var dummy_impostor = createBufferGeometryCyl();
 const canvas_custom = document.getElementById("threeCanvas");
 var renderer_custom;
 renderer_custom = new THREE.WebGLRenderer({
@@ -54,8 +59,10 @@ function createBufferGeometryCyl() {
     return geometry;
 }
 var impostorMaterialSphere;
+var impostorMaterialSmallerSphere;
 var impostorMaterialCyl;
 createImpostorMaterial_Sphere();
+createImpostorMaterial_SmallerSphere();
 createImpostorMaterial_Cyl();
 function createImpostorMaterial_Cyl() {
     var outline_shader = {
@@ -72,7 +79,7 @@ function createImpostorMaterial_Cyl() {
                 'diffuse': { type: 'c', value: new THREE.Color(0xFFFFFF) },
                 'opacity': { type: 'f', value: 0.1 },
                 'fog': true,
-                'radius': { type: 'f', value: 1.0 },
+                'radius': { type: 'f', value: 0.1 },
             }
         ]),
         vertex_shader: document.getElementById('shaderCyl-vs').innerHTML,
@@ -104,7 +111,7 @@ function createImpostorMaterial_Sphere() {
                 'diffuse': { type: 'c', value: new THREE.Color(0xFFFFFF) },
                 'opacity': { type: 'f', value: 0.1 },
                 'fog': true,
-                'radius': { type: 'f', value: 3.0 },
+                'radius': { type: 'f', value: 0.2 },
             }
         ]),
         vertex_shader: document.getElementById('shaderSphere-vs').innerHTML,
@@ -120,6 +127,38 @@ function createImpostorMaterial_Sphere() {
         clipping: true
     });
     impostorMaterialSphere.extensions.fragDepth = true;
+}
+function createImpostorMaterial_SmallerSphere() {
+    var outline_shader = {
+        uniforms: THREE.UniformsUtils.merge([
+            THREE.UniformsLib['lights'],
+            THREE.UniformsLib['fog'],
+            {
+                'viewport': { type: 'v4', value: new THREE.Vector4() },
+                'modelViewMatrixInverse': { type: 'm4', value: new THREE.Matrix4() },
+                'projectionMatrixInverse': { type: 'm4', value: new THREE.Matrix4() },
+                'emissive': { type: 'c', value: new THREE.Color(0x000000) },
+                'specular': { type: 'c', value: new THREE.Color(0x111111) },
+                'shininess': { type: 'f', value: 30 },
+                'diffuse': { type: 'c', value: new THREE.Color(0xFFFFFF) },
+                'opacity': { type: 'f', value: 0.1 },
+                'fog': true,
+                'radius': { type: 'f', value: 0.1 },
+            }
+        ]),
+        vertex_shader: document.getElementById('shaderSphere-vs').innerHTML,
+        fragment_shader: document.getElementById('shaderSphere-fs').innerHTML
+    };
+    impostorMaterialSmallerSphere = new THREE.ShaderMaterial({
+        uniforms: THREE.UniformsUtils.clone(outline_shader.uniforms),
+        vertexShader: outline_shader.vertex_shader,
+        fragmentShader: outline_shader.fragment_shader,
+        lights: true,
+        vertexColors: THREE.VertexColors,
+        fog: true,
+        clipping: true
+    });
+    impostorMaterialSmallerSphere.extensions.fragDepth = true;
 }
 var scene_custom = new THREE.Scene();
 var WIDTH = window.innerWidth - 20;
@@ -155,19 +194,8 @@ function add_custom_atoms_bonds(scene_to_add) {
     sphere1.normalizeNormals();
     mesh2 = new THREE.Points(sphere1, impostorMaterialSphere);
     scene_to_add.add(mesh2);
-    var sphere1 = createBufferGeometrySphere();
-    // Creating vertex buffer
-    var position = new Float32Array([-10, 0, 0]);
-    sphere1.addAttribute('position', new THREE.BufferAttribute(position, 3));
-    // Creating color buffer
-    var color = new Float32Array([0.8, 0.5, 0.2]);
-    sphere1.addAttribute('color', new THREE.BufferAttribute(color, 3));
-    sphere1.computeVertexNormals();
-    sphere1.normalizeNormals();
-    mesh2 = new THREE.Points(sphere1, impostorMaterialSphere);
-    scene_to_add.add(mesh2);
 }
-add_custom_atoms_bonds(scene_custom);
+// add_custom_atoms_bonds(scene_custom);
 function updateMaterialUniforms(group, camera) {
     var projectionMatrixInverse = new THREE.Matrix4();
     var projectionMatrixTranspose = new THREE.Matrix4();
@@ -206,6 +234,16 @@ function updateMaterialUniforms(group, camera) {
 function render() {
     var custom_render = 1;
     if (custom_render == 1) {
+        bachbone_impostor_geometry["attributes"]["position"].needsUpdate = true;
+        bachbone_impostor_geometry["attributes"]["color"].needsUpdate = true;
+        nucleosideGeometry_impostor["attributes"]["position"].needsUpdate = true;
+        nucleosideGeometry_impostor["attributes"]["color"].needsUpdate = true;
+        connectorGeometry_impostor["attributes"]["position"].needsUpdate = true;
+        connectorGeometry_impostor["attributes"]["dir"].needsUpdate = true;
+        connectorGeometry_impostor["attributes"]["color"].needsUpdate = true;
+        spGeometry_impostor["attributes"]["position"].needsUpdate = true;
+        spGeometry_impostor["attributes"]["dir"].needsUpdate = true;
+        spGeometry_impostor["attributes"]["color"].needsUpdate = true;
         // Clear renderer
         renderer_custom.clear();
         // Update uniforms for outline

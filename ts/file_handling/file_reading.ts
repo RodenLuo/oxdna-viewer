@@ -304,6 +304,31 @@ function addSystemToScene(system: System) {
     // If you make any modifications to the drawing matricies here, they will take effect before anything draws
     // however, if you want to change once stuff is already drawn, you need to add "<attribute>.needsUpdate" before the render() call.
     // This will force the gpu to check the vectors again when redrawing.
+    
+    bachbone_impostor_geometry.addAttribute('position', new THREE.BufferAttribute(system.bbOffsets, 3));
+    bachbone_impostor_geometry.addAttribute('color', new THREE.BufferAttribute(system.bbColors, 3));
+    bachbone_impostor_geometry.computeVertexNormals();
+    bachbone_impostor_geometry.normalizeNormals();
+    var bachbone_impostor_geometry_mesh = new THREE.Points(bachbone_impostor_geometry, impostorMaterialSphere);
+    scene_custom.add(bachbone_impostor_geometry_mesh); 
+
+    nucleosideGeometry_impostor.addAttribute('position', new THREE.BufferAttribute(system.nsOffsets, 3));
+    nucleosideGeometry_impostor.addAttribute('color', new THREE.BufferAttribute(system.nsColors, 3));
+    nucleosideGeometry_impostor.computeVertexNormals();
+    nucleosideGeometry_impostor.normalizeNormals();
+    var nucleosideGeometry_impostor_mesh = new THREE.Points(nucleosideGeometry_impostor, impostorMaterialSmallerSphere);
+    scene_custom.add(nucleosideGeometry_impostor_mesh); 
+    
+    connectorGeometry_impostor.addAttribute('position', new THREE.BufferAttribute(system.conOffsets, 3));
+    connectorGeometry_impostor.addAttribute('dir', new THREE.BufferAttribute(system.conRotation, 3));
+    connectorGeometry_impostor.addAttribute('color', new THREE.BufferAttribute(system.conOffsets, 3));
+    connectorGeometry_impostor.computeVertexNormals();
+    connectorGeometry_impostor.normalizeNormals();
+    var connectorGeometry_impostor_mesh = new THREE.Points(connectorGeometry_impostor, impostorMaterialCyl);
+    scene_custom.add(connectorGeometry_impostor_mesh); 
+
+    
+    
 
     // Add the geometries to the systems
     system.backboneGeometry = instancedBackbone.clone();
