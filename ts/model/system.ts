@@ -41,7 +41,7 @@ class System {
     spGeometry: THREE.InstancedBufferGeometry;
     pickingGeometry: THREE.InstancedBufferGeometry;
 
-    backbone: THREE.Mesh;
+    backbone;
     nucleoside: THREE.Mesh;
     connector: THREE.Mesh;
     bbconnector: THREE.Mesh;
