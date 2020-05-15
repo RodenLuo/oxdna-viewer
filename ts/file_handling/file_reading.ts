@@ -300,72 +300,6 @@ function readJson(system, jsonReader) {
     }
 }
 
-var impostorMaterialSphere;
-var impostorMaterialCyl;
-createImpostorMaterial();
-
-function createImpostorMaterial() {
-	var outline_shader = {
-        uniforms: THREE.UniformsUtils.merge([
-            THREE.UniformsLib['lights'],
-            THREE.UniformsLib['fog'],
-            {
-                'viewport':  { type: 'v4', value: new THREE.Vector4() },
-                'modelViewMatrixInverse':  { type: 'm4', value: new THREE.Matrix4() },
-                'projectionMatrixInverse':  { type: 'm4', value: new THREE.Matrix4() },
-                'emissive' : { type: 'c', value: new THREE.Color(0x000000) },
-                'specular' : { type: 'c', value: new THREE.Color(0x111111) },
-                'shininess': { type: 'f', value: 30 },
-                'diffuse': { type: 'c', value: new THREE.Color(0xFFFFFF) },
-                'opacity': { type: 'f', value: 0.1 },
-                'fog': true
-            }]),
-        vertex_shader: document.getElementById('shaderCyl-vs').innerHTML,
-        fragment_shader: document.getElementById('shaderCyl-fs').innerHTML
-    };
-
-    impostorMaterialCyl = new THREE.ShaderMaterial({
-        uniforms: THREE.UniformsUtils.clone(outline_shader.uniforms),
-        vertexShader: outline_shader.vertex_shader,
-        fragmentShader: outline_shader.fragment_shader,
-        lights: true,
-        vertexColors: THREE.VertexColors,
-        fog: true,
-        clipping: true
-    });
-    impostorMaterialCyl.extensions.fragDepth = true;
-    
-    outline_shader = {
-        uniforms: THREE.UniformsUtils.merge([
-            THREE.UniformsLib['lights'],
-            THREE.UniformsLib['fog'],
-            {
-                'viewport':  { type: 'v4', value: new THREE.Vector4() },
-                'modelViewMatrixInverse':  { type: 'm4', value: new THREE.Matrix4() },
-                'projectionMatrixInverse':  { type: 'm4', value: new THREE.Matrix4() },
-                'emissive' : { type: 'c', value: new THREE.Color(0x000000) },
-                'specular' : { type: 'c', value: new THREE.Color(0x111111) },
-                'shininess': { type: 'f', value: 30 },
-                'diffuse': { type: 'c', value: new THREE.Color(0xFFFFFF) },
-                'opacity': { type: 'f', value: 0.1 },
-                'fog': true
-            }]),
-        vertex_shader: document.getElementById('shaderSphere-vs').innerHTML,
-        fragment_shader: document.getElementById('shaderSphere-fs').innerHTML
-    };
-
-    impostorMaterialSphere = new THREE.ShaderMaterial({
-        uniforms: THREE.UniformsUtils.clone(outline_shader.uniforms),
-        vertexShader: outline_shader.vertex_shader,
-        fragmentShader: outline_shader.fragment_shader,
-        lights: true,
-        vertexColors: THREE.VertexColors,
-        fog: true,
-        clipping: true
-    });
-    impostorMaterialSphere.extensions.fragDepth = true;
-}
-
 function addSystemToScene(system: System) {
     // If you make any modifications to the drawing matricies here, they will take effect before anything draws
     // however, if you want to change once stuff is already drawn, you need to add "<attribute>.needsUpdate" before the render() call.
@@ -380,6 +314,9 @@ function addSystemToScene(system: System) {
 
     // Feed data arrays to the geometries
     // system.backboneGeometry.addAttribute('position', new THREE.BufferAttribute(system.bbOffsets, 3));
+    // system.backboneGeometry.addAttribute('color', new THREE.BufferAttribute(system.bbColors, 3));
+    // system.backboneGeometry.computeVertexNormals();
+    // system.backboneGeometry.normalizeNormals();
     // // Creating radius buffer
     // var radius = new Float32Array( [1] );
     // system.backboneGeometry.addAttribute('radius', new THREE.BufferAttribute(radius, 1));
@@ -435,9 +372,9 @@ function addSystemToScene(system: System) {
 
     // Add everything to the scene
     scene.add(system.backbone);
-    // scene.add(system.nucleoside);
-    // scene.add(system.connector);
-    // scene.add(system.bbconnector);
+    scene.add(system.nucleoside);
+    scene.add(system.connector);
+    scene.add(system.bbconnector);
 
     pickingScene.add(system.dummyBackbone);
 
