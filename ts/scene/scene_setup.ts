@@ -8,10 +8,266 @@
 //    stats.dom
 //);
 
+const canvas_custom = <HTMLCanvasElement> document.getElementById("threeCanvas");
+
+var renderer_custom;
+renderer_custom = new THREE.WebGLRenderer({ 
+    antialias: true,     
+    preserveDrawingBuffer: true, 
+    canvas: canvas_custom
+});
+renderer_custom.setSize(WIDTH, HEIGHT);
+renderer_custom.autoClear = false;
+renderer_custom.sortObjects = true;
+// document.body.appendChild(renderer_custom.domElement);
+
+
+function createBufferGeometrySphere() {
+    var geometry = new THREE.BufferGeometry();
+    
+    return geometry;
+ }
+
+ function createBufferGeometryCyl( ) {
+    var geometry = new THREE.BufferGeometry();
+
+		// Creating array buffers
+    var positionArray = [];
+    var colorArray = [];
+    var radiusArray = [];
+    var dirArray = [];
+    
+    // Init sphere position
+    positionArray.push(-10.0, 0, 0);
+  	colorArray.push(1, 0, 0);
+    radiusArray.push(2.5);
+    dirArray.push(10.0, 0.0, 0.0);
+    
+    positionArray.push(10.0, 0, 0);
+  	colorArray.push(0.2, 0.8, 0.5);
+    radiusArray.push(2.5);
+    dirArray.push(-10.0, 0.0, 0.0);
+    
+    // Creating vertex buffer
+    var position = new Float32Array(positionArray);
+    geometry.addAttribute('position', new THREE.BufferAttribute(position, 3));
+    
+    // // Creating radius buffer
+    // var radius = new Float32Array(radiusArray);
+    // geometry.addAttribute('radius', new THREE.BufferAttribute(radius, 1));
+    
+    // Creating radius buffer
+    var direction = new Float32Array(dirArray);
+    geometry.addAttribute('dir', new THREE.BufferAttribute(direction, 3));
+    
+    // Creating color buffer
+    var color = new Float32Array(colorArray);
+    geometry.addAttribute('color', new THREE.BufferAttribute(color, 3));
+    
+		geometry.computeVertexNormals();
+		geometry.normalizeNormals();
+    
+    return geometry;
+}
+
+var impostorMaterialSphere;
+var impostorMaterialCyl;
+createImpostorMaterial_Sphere();
+createImpostorMaterial_Cyl();
+
+function createImpostorMaterial_Cyl(){
+    var outline_shader = {
+        uniforms: THREE.UniformsUtils.merge([
+            THREE.UniformsLib['lights'],
+            THREE.UniformsLib['fog'],
+            {
+                'viewport':  { type: 'v4', value: new THREE.Vector4() },
+                'modelViewMatrixInverse':  { type: 'm4', value: new THREE.Matrix4() },
+                'projectionMatrixInverse':  { type: 'm4', value: new THREE.Matrix4() },
+                'emissive' : { type: 'c', value: new THREE.Color(0x000000) },
+                'specular' : { type: 'c', value: new THREE.Color(0x111111) },
+                'shininess': { type: 'f', value: 30 },
+                'diffuse': { type: 'c', value: new THREE.Color(0xFFFFFF) },
+                'opacity': { type: 'f', value: 0.1 },
+                'fog': true,
+                'radius': {type: 'f', value: 1.0 },
+            }]),
+        vertex_shader: document.getElementById('shaderCyl-vs').innerHTML,
+        fragment_shader: document.getElementById('shaderCyl-fs').innerHTML
+    };
+
+    impostorMaterialCyl = new THREE.ShaderMaterial({
+        uniforms: THREE.UniformsUtils.clone(outline_shader.uniforms),
+        vertexShader: outline_shader.vertex_shader,
+        fragmentShader: outline_shader.fragment_shader,
+        lights: true,
+        vertexColors: THREE.VertexColors,
+        fog: true,
+        clipping: true
+    });
+    impostorMaterialCyl.extensions.fragDepth = true;
+}
+
+function createImpostorMaterial_Sphere() {
+    
+    var outline_shader = {
+        uniforms: THREE.UniformsUtils.merge([
+            THREE.UniformsLib['lights'],
+            THREE.UniformsLib['fog'],
+            {
+                'viewport':  { type: 'v4', value: new THREE.Vector4() },
+                'modelViewMatrixInverse':  { type: 'm4', value: new THREE.Matrix4() },
+                'projectionMatrixInverse':  { type: 'm4', value: new THREE.Matrix4() },
+                'emissive' : { type: 'c', value: new THREE.Color(0x000000) },
+                'specular' : { type: 'c', value: new THREE.Color(0x111111) },
+                'shininess': { type: 'f', value: 30 },
+                'diffuse': { type: 'c', value: new THREE.Color(0xFFFFFF) },
+                'opacity': { type: 'f', value: 0.1 },
+                'fog': true,
+                'radius': {type: 'f', value: 3.0 },
+            }]),
+        vertex_shader: document.getElementById('shaderSphere-vs').innerHTML,
+        fragment_shader: document.getElementById('shaderSphere-fs').innerHTML
+    };
+
+    impostorMaterialSphere = new THREE.ShaderMaterial({
+        uniforms: THREE.UniformsUtils.clone(outline_shader.uniforms),
+        vertexShader: outline_shader.vertex_shader,
+        fragmentShader: outline_shader.fragment_shader,
+        lights: true,
+        vertexColors: THREE.VertexColors,
+        fog: true,
+        clipping: true
+    });
+    impostorMaterialSphere.extensions.fragDepth = true;
+}
+
+var scene_custom = new THREE.Scene();
+var WIDTH = window.innerWidth - 20;
+var HEIGHT = window.innerHeight - 20;
+var camera_custom = new THREE.PerspectiveCamera(50, window.WIDTH / HEIGHT, 1, 100);
+camera_custom.position.z = 30;
+camera_custom.position.y = 0;
+    
+var ambient = new THREE.AmbientLight( 0xffffff, 1 );
+scene_custom.add(ambient);
+
+var directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
+directionalLight.position.set( 0, 3, 3 );
+scene_custom.add( directionalLight );
+
+var helper = new THREE.DirectionalLightHelper(directionalLight, 1);
+scene_custom.add(helper);
+    
+scene_custom.add(camera_custom);
+var controls_custom = new THREE.OrbitControls( camera_custom );
+
+function add_custom_atoms_bonds(scene_to_add){
+    var mesh1, mesh2;
+    var geometry1 = createBufferGeometryCyl();
+    mesh1 = new THREE.Points(geometry1, impostorMaterialCyl);
+    scene_to_add.add(mesh1);
+    
+
+    // var sphere1 = createBufferGeometrySphere([10, 0, 0], 5, [0.8, 0.5, 0.2]);
+    // mesh2 = new THREE.Points(sphere1, impostorMaterialSphere);
+    // scene.add(mesh2);
+        var sphere1 = createBufferGeometrySphere();
+        // Creating vertex buffer
+        var position = new Float32Array( [10, 0, 0] );
+        sphere1.addAttribute('position', new THREE.BufferAttribute(position, 3));
+        
+        // Creating color buffer
+        var color = new Float32Array( [0.8, 0.5, 0.2] );
+        sphere1.addAttribute('color', new THREE.BufferAttribute(color, 3));
+        
+        sphere1.computeVertexNormals();
+        sphere1.normalizeNormals();
+        mesh2 = new THREE.Points(sphere1, impostorMaterialSphere);
+        scene_to_add.add(mesh2);   
+        
+        var sphere1 = createBufferGeometrySphere();
+        // Creating vertex buffer
+        var position = new Float32Array( [-10, 0, 0] );
+        sphere1.addAttribute('position', new THREE.BufferAttribute(position, 3));
+        
+        // Creating color buffer
+        var color = new Float32Array( [0.8, 0.5, 0.2] );
+        sphere1.addAttribute('color', new THREE.BufferAttribute(color, 3));
+        
+        sphere1.computeVertexNormals();
+        sphere1.normalizeNormals();
+        mesh2 = new THREE.Points(sphere1, impostorMaterialSphere);
+        scene_to_add.add(mesh2); 
+}
+
+add_custom_atoms_bonds(scene_custom);
+
+function updateMaterialUniforms(group, camera) {
+
+    var projectionMatrixInverse = new THREE.Matrix4();
+    var projectionMatrixTranspose = new THREE.Matrix4();
+
+    var modelViewMatrixInverse = new THREE.Matrix4();
+
+    var viewport = new THREE.Vector4(0.0, 0.0, WIDTH, HEIGHT);
+
+		camera.updateMatrixWorld();
+    camera.matrixWorldInverse.getInverse( camera.matrixWorld );
+    
+    projectionMatrixInverse.getInverse(
+        camera.projectionMatrix
+    );
+
+    projectionMatrixTranspose.copy(
+        camera.projectionMatrix
+    ).transpose();
+
+    group.traverse(function(o) {
+        if (!o.material) { return; }
+
+        var u = o.material.uniforms;
+        if (!u) { return; }
+
+        if (u.projectionMatrixInverse) {
+            u.projectionMatrixInverse.value = projectionMatrixInverse;
+        }
+
+        if (u.projectionMatrixTranspose) {
+            u.projectionMatrixTranspose.value = projectionMatrixTranspose;
+        }
+
+        if (u.modelViewMatrixInverse) {
+            var matrix = new THREE.Matrix4().multiplyMatrices(camera.matrixWorldInverse, o.matrixWorld);
+            modelViewMatrixInverse.getInverse(
+                matrix
+            );
+            u.modelViewMatrixInverse.value = modelViewMatrixInverse;
+        }
+
+        if (u.viewport) {
+            u.viewport.value = viewport;
+        }
+    });
+};
+
 // scene update call definition
 function render() {
-    renderer.render(scene, camera);
-    //renderer.render(pickingScene, camera);
+    var custom_render = 1;
+    if (custom_render == 1) {
+        // Clear renderer
+        renderer_custom.clear();
+
+        // Update uniforms for outline
+        updateMaterialUniforms(scene_custom, camera_custom);
+        
+        // Render the scene
+        renderer_custom.render(scene_custom, camera_custom);
+    }
+    else{
+        renderer.render(scene, camera);
+        //renderer.render(pickingScene, camera);
+    }
 }
 function renderColorbar() {
     colorbarRenderer.render(colorbarScene, colorbarCamera);
