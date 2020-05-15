@@ -260,6 +260,7 @@ function readJson(system, jsonReader) {
 }
 var impostorMaterialSphere;
 var impostorMaterialCyl;
+createImpostorMaterial();
 function createImpostorMaterial() {
     var outline_shader = {
         uniforms: THREE.UniformsUtils.merge([
@@ -376,9 +377,9 @@ function addSystemToScene(system) {
     system.dummyBackbone.frustumCulled = false;
     // Add everything to the scene
     scene.add(system.backbone);
-    scene.add(system.nucleoside);
-    scene.add(system.connector);
-    scene.add(system.bbconnector);
+    // scene.add(system.nucleoside);
+    // scene.add(system.connector);
+    // scene.add(system.bbconnector);
     pickingScene.add(system.dummyBackbone);
     // Catch an error caused by asynchronous readers and different file sizes
     if (toggleFailure) {

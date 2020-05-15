@@ -302,6 +302,7 @@ function readJson(system, jsonReader) {
 
 var impostorMaterialSphere;
 var impostorMaterialCyl;
+createImpostorMaterial();
 
 function createImpostorMaterial() {
 	var outline_shader = {
@@ -434,9 +435,9 @@ function addSystemToScene(system: System) {
 
     // Add everything to the scene
     scene.add(system.backbone);
-    scene.add(system.nucleoside);
-    scene.add(system.connector);
-    scene.add(system.bbconnector);
+    // scene.add(system.nucleoside);
+    // scene.add(system.connector);
+    // scene.add(system.bbconnector);
 
     pickingScene.add(system.dummyBackbone);
 
