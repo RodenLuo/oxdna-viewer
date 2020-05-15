@@ -403,20 +403,20 @@
                 return outMatrix;
             }
             
-            #include <common>
+            //#include <common>
             #include <color_pars_vertex>
             #include <logdepthbuf_pars_vertex>
             #include <clipping_planes_pars_vertex>
             
-            attribute float radius;
+            uniform float radius;
             attribute vec3 dir;
             
             uniform vec4 viewport;
             uniform mat4 modelViewMatrixInverse;
             
             varying mat4 MTInverse;
-            varying mat4 VPInverse;
-            varying vec4 centernormclip;
+            
+            
             
             // Near, far, width and height
             varying float n, f, w, h;
@@ -588,15 +588,15 @@
                 projMatrix11 = projectionMatrix[0][0];
                 projMatrix22 = projectionMatrix[1][1];
             }
-            </script>
-            <script id="shaderCyl-fs" type="x-shader/x-fragment">
+        </script>
+        <script id="shaderCyl-fs" type="x-shader/x-fragment">
             // Inherits from Phong Shading in ThreeJS, allows compatibility with chunks
             #define PHONG
             
             #include <common>
             #include <fog_pars_fragment>
             #include <color_pars_fragment>
-            #include <lights_pars>
+            #include <lights_pars_begin>
             #include <bsdfs>
             #include <lights_phong_pars_fragment>
             #include <clipping_planes_pars_fragment>
@@ -627,8 +627,8 @@
             }
             
             varying mat4 MTInverse;
-            varying mat4 VPInverse;
-            varying vec4 centernormclip;
+            
+            
             
             // Near, far, width and height
             varying float n, f, w, h;
@@ -740,7 +740,7 @@
                     // Declaring specularStength to get compatibility with threejs chunks
                     float specularStrength = 1.0;
                     #include <lights_phong_fragment>
-                    #include <lights_template>
+                    #include <lights_fragment_begin>
                     vec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse +
                                             reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveLight;
             
@@ -749,8 +749,8 @@
                     #include <fog_fragment>
                 }
             }
-            </script>
-            <script id="shaderSphere-vs" type="x-shader/x-vertex">
+        </script>
+        <script id="shaderSphere-vs" type="x-shader/x-vertex">
             // Inherits from Phong Shading in ThreeJS, allows compatibility with chunks
             #define PHONG
             
@@ -779,19 +779,19 @@
                 return outMatrix;
             }
             
-            #include <common>
+            //#include <common>
             #include <color_pars_vertex>
-            #include <logdepthbuf_pars_vertex>
-            #include <clipping_planes_pars_vertex>
+            //#include <logdepthbuf_pars_vertex>
+            //#include <clipping_planes_pars_vertex>
             
-            attribute float radius;
+            uniform float radius;
             
             uniform vec4 viewport;
             uniform mat4 modelViewMatrixInverse;
             
             varying mat4 MTInverse;
-            varying mat4 VPInverse;
-            varying vec4 centernormclip;
+            
+            
             
             // Near, far, width and height
             varying float n, f, w, h;
@@ -808,7 +808,7 @@
                 // Chunck to compute position in world space
                 #include <begin_vertex>
                 #include <project_vertex>
-                #include <logdepthbuf_vertex>
+                //#include <logdepthbuf_vertex>
                 #include <clipping_planes_vertex>
             
                 vViewPosition = - mvPosition.xyz;
@@ -884,18 +884,18 @@
                 projMatrix11 = projectionMatrix[0][0];
                 projMatrix22 = projectionMatrix[1][1];
             }
-            </script>
-            <script id="shaderSphere-fs" type="x-shader/x-fragment">
+        </script>
+        <script id="shaderSphere-fs" type="x-shader/x-fragment">
             // Inherits from Phong Shading in ThreeJS, allows compatibility with chunks
             #define PHONG
             
             #include <common>
-            #include <fog_pars_fragment>
+            //#include <fog_pars_fragment>
             #include <color_pars_fragment>
-            #include <lights_pars>
+            #include <lights_pars_begin>
             #include <bsdfs>
             #include <lights_phong_pars_fragment>
-            #include <clipping_planes_pars_fragment>
+            //#include <clipping_planes_pars_fragment>
             
             // Normalize diagonal matrix (1)
             const mat4 D = mat4(
@@ -923,8 +923,8 @@
             }
             
             varying mat4 MTInverse;
-            varying mat4 VPInverse;
-            varying vec4 centernormclip;
+            
+            
             
             // Near, far, width and height
             varying float n, f, w, h;
@@ -1015,16 +1015,16 @@
                     // Declaring specularStength to get compatibility with threejs chunks
                     float specularStrength = 1.0;
                     #include <lights_phong_fragment>
-                    #include <lights_template>
+                    #include <lights_fragment_begin>
                     vec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse +
                                             reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveLight;
             
                     gl_FragColor = vec4(outgoingLight, opacity);
             
-                    #include <fog_fragment>
+                    //#include <fog_fragment>
                 }
             }
-            </script>
+        </script>
 
         <script src="./ts/lib/Lut.js"></script>
         <script src="./ts/lib/justcontext.js"></script>
